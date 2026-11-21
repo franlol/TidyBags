@@ -10,6 +10,9 @@
 ## SavedVariables: TidyBagsDB
 
 Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 Libs\LibFlatyUI-1.0\LibFlatyUI-1.0.lua
 
 Locales\Locale.lua
@@ -21,3 +24,4 @@ Buttons.lua
 Window.lua
 Blizzard.lua
 Options.lua
+Icon.lua

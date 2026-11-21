@@ -86,6 +86,8 @@ local function BuildLook(container)
     card:Add(UI.Check(card, L["Bag slots"], g, s, O()))
     g, s = Bind("locked")
     card:Add(UI.Check(card, L["Lock position"], g, s, O()))
+    card:Add(UI.Check(card, L["Minimap icon"], function() return not ns.db.icon.hide end,
+        function(v) ns.SetMinimapIcon(v) end))
     card:Add(UI.Buttons(card, {
         { L["Reset position"], function()
             ns.P.pos = ns.Copy(ns.defaults.pos)

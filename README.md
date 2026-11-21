@@ -13,4 +13,4 @@ All your bags in one clean window, for WoW Forever.
 - Two looks: Flaty and Blizzard
 - Opens and closes with the game's bags: bag key, Escape, vendors, mail
 
-Options: `/tidybags` or `/tb`.
+Options: `/tidybags`, `/tb`, or right click the minimap icon (click: the bags).

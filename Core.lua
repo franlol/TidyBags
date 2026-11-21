@@ -6,6 +6,7 @@
 --     chars     = { [character] = saved bags },   (Data.lua)
 --     profiles  = { [name] = settings },
 --     profileOf = { [character] = name },
+--     icon      = LibDBIcon's saved state (account-wide),
 -- }
 -- ns.P is the profile in use. Every change applies at once.
 -------------------------------------------------------------------------------
@@ -191,6 +192,7 @@ ev:SetScript("OnEvent", function(self, event, name)
         ns.db.chars = ns.db.chars or {}
         ns.db.profiles = ns.db.profiles or {}
         ns.db.profileOf = ns.db.profileOf or {}
+        ns.db.icon = ns.db.icon or {}
         ns.SetLanguage(ns.db.language or "enUS")
     else
         ns.charKey = CharKey()
