@@ -11,6 +11,7 @@
 -------------------------------------------------------------------------------
 
 local _, ns = ...
+local Flaty = LibStub("LibFlatyUI-1.0")
 
 ns.BUTTON = 37
 local FLAT = "Interface\\Buttons\\WHITE8X8"
@@ -75,19 +76,40 @@ local function Paint(b, hasItem, quality)
         if normal then normal:SetAlpha(1) end
         if pushed then pushed:SetAlpha(1) end
     end
+    ns.StyleTexts(b)
 end
 
 -------------------------------------------------------------------------------
--- Item level on equipment
+-- Texts on the items: stack count (Blizzard's) and item level (ours)
 -------------------------------------------------------------------------------
 local function LevelText(b)
     if not b.tbLevel then
         b.tbLevel = b:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
-        b.tbLevel:SetPoint("TOPLEFT", 3, -3)
-        b.tbLevel:SetJustifyH("LEFT")
     end
     return b.tbLevel
 end
+
+-- Buttons are scaled (size / 37): sizes and offsets are divided by the
+-- scale so they read in px on screen
+local function StyleText(b, fs, cfg)
+    local s = ns.P.size / ns.BUTTON
+    Flaty.SetFontFile(fs, cfg.font, cfg.size / s, cfg.outline)
+    fs:ClearAllPoints()
+    fs:SetPoint(cfg.point, b, cfg.point, cfg.x / s, cfg.y / s)
+    fs:SetJustifyH(cfg.point:find("LEFT") and "LEFT" or cfg.point:find("RIGHT") and "RIGHT" or "CENTER")
+end
+
+-- The text settings on a button, once per change (ns.textsVersion)
+function ns.StyleTexts(b)
+    if b.tbTexts == ns.textsVersion then return end
+    b.tbTexts = ns.textsVersion
+    StyleText(b, b.Count, ns.P.texts.count)
+    StyleText(b, LevelText(b), ns.P.texts.ilvl)
+end
+
+-- every change of the settings styles the texts again
+ns.textsVersion = 0
+ns.Module(function() end, function() ns.textsVersion = ns.textsVersion + 1 end)
 
 local function IsGear(id)
     if not id then return false end

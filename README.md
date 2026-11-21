@@ -6,6 +6,7 @@ All your bags in one clean window, for WoW Forever.
 - The backpack's extra slots shown locked until an authenticator unlocks them
 - The game's search, sorting and bag options (right click a bag or the sort button)
 - Item level, quality borders, grey junk
+- Stack count and item level texts: font, size, outline and position
 - Your other characters' bags, and how many of an item each one has in tooltips
 - Free slots, tracked currencies, money (hover: every character's)
 - Two looks: Flaty and Blizzard

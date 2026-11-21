@@ -35,6 +35,12 @@ ns.defaults = {
     quality = true,         -- border in the item's quality color
     junk = true,            -- grey poor quality items
     tooltip = true,         -- counts of other characters in item tooltips
+    -- the texts on the items: font, size (px on screen), outline, and the
+    -- point of the item they sit at, with an offset (px)
+    texts = {
+        count = { font = "Fonts\\ARIALN.TTF", size = 14, outline = "OUTLINE", point = "BOTTOMRIGHT", x = -2, y = 2 },
+        ilvl = { font = "Fonts\\ARIALN.TTF", size = 12, outline = "OUTLINE", point = "TOPLEFT", x = 2, y = -2 },
+    },
 }
 
 local function Copy(t)

@@ -138,6 +138,46 @@ local function BuildItems(container)
 end
 
 -------------------------------------------------------------------------------
+-- Texts: the same card for each text on the items
+-------------------------------------------------------------------------------
+local POINTS = function()
+    return {
+        { "TOPLEFT", L["Top left"] }, { "TOP", L["Top"] }, { "TOPRIGHT", L["Top right"] },
+        { "LEFT", L["Left"] }, { "CENTER", L["Center"] }, { "RIGHT", L["Right"] },
+        { "BOTTOMLEFT", L["Bottom left"] }, { "BOTTOM", L["Bottom"] }, { "BOTTOMRIGHT", L["Bottom right"] },
+    }
+end
+local OUTLINES = function()
+    return { { "", L["None"] }, { "OUTLINE", L["Thin"] }, { "THICKOUTLINE", L["Thick"] } }
+end
+
+local function TextCard(page, col, key, title, enableIf)
+    local card = page:Add(col, UI.Card(page.content, title))
+    local function Get(k) return function() return ns.P.texts[key][k] end end
+    local function Set(k) return function(v) ns.P.texts[key][k] = v ns.ApplyAll() end end
+    card:Add(UI.Dropdown(card, L["Font"], function() return UI.MediaList("font") end,
+        function() return UI.ResolveMedia(ns.P.texts[key].font) end, Set("font"), { enableIf = enableIf }))
+    card:Add(UI.Slider(card, L["Size"], 6, 32, 1, Get("size"), Set("size"), { format = UI.px, enableIf = enableIf }))
+    card:Add(UI.Segmented(card, L["Outline"], OUTLINES(), Get("outline"), Set("outline"), { enableIf = enableIf }))
+    card:Add(UI.Dropdown(card, L["Position"], POINTS, Get("point"), Set("point"), { enableIf = enableIf }))
+    card:Add(UI.Slider(card, L["X offset"], -20, 20, 1, Get("x"), Set("x"), { format = UI.px, enableIf = enableIf }))
+    card:Add(UI.Slider(card, L["Y offset"], -20, 20, 1, Get("y"), Set("y"), { format = UI.px, enableIf = enableIf }))
+    card:Add(UI.Buttons(card, {
+        { L["Reset"], function()
+            ns.P.texts[key] = ns.Copy(ns.defaults.texts[key])
+            ns.ApplyAll()
+        end, "danger", confirm = true },
+    }, { enableIf = enableIf }))
+end
+
+local function BuildTexts(container)
+    local page = UI.Page(container, 2)
+    TextCard(page, 1, "count", L["Stack count"])
+    TextCard(page, 2, "ilvl", L["Item level"], function() return ns.P.ilvl end)
+    page:Layout()
+end
+
+-------------------------------------------------------------------------------
 -- Characters
 -------------------------------------------------------------------------------
 local function BuildCharacters(container)
@@ -239,6 +279,7 @@ local function Build()
         logo = "Interface\\Icons\\INV_Misc_Bag_08", width = 600, height = 440, navWidth = 110 })
     win:AddNav("look", L["Look"], BuildLook)
     win:AddNav("items", L["Items"], BuildItems)
+    win:AddNav("texts", L["Texts"], BuildTexts)
     win:AddNav("characters", L["Characters"], BuildCharacters)
     win:AddNav("profiles", L["Profiles"], BuildProfiles)
     UI.OnRefresh = function()

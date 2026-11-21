@@ -31,4 +31,5 @@
 ## Options
 - [ ] Every change shows at once on the open bags, both looks
 - [ ] Columns, item size, spacing, scale; lock position; reset position
+- [ ] Texts: count and item level font, size, outline, position and offsets; they keep their size on screen when the item size changes; Reset
 - [ ] Profiles: new, copy, reset, delete; language switch rebuilds the window

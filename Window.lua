@@ -416,6 +416,7 @@ function ns.PaintBag(b)
         b.icon:SetTexCoord(0, 1, 0, 1)
         if b.tbEdge then b.tbEdge:Hide() end
     end
+    ns.StyleTexts(b)
 end
 
 -- Places a button in the grid: index i of a block starting at y (px)
