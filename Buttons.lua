@@ -58,9 +58,13 @@ local function Paint(b, hasItem, quality, edge)
             r, g, bl = QualityColor(quality)
         end
         b.tbEdge:SetVertexColor(r or 0, g or 0, bl or 0, 1)
-        b.icon:ClearAllPoints()
-        b.icon:SetPoint("TOPLEFT", 1, -1)
-        b.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+        if b.tbIcon ~= "flaty" then
+            b.tbIcon = "flaty"
+            b.icon:ClearAllPoints()
+            b.icon:SetPoint("TOPLEFT", 1, -1)
+            b.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+        end
+        -- the game's empty slot art resets the coords
         b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         b.icon:SetAlpha(hasItem and 1 or 0)
         b.IconBorder:SetAlpha(0)
@@ -71,8 +75,11 @@ local function Paint(b, hasItem, quality, edge)
             b.tbEdge:Hide()
             b.tbFill:Hide()
         end
-        b.icon:ClearAllPoints()
-        b.icon:SetAllPoints()
+        if b.tbIcon ~= "blizzard" then
+            b.tbIcon = "blizzard"
+            b.icon:ClearAllPoints()
+            b.icon:SetAllPoints()
+        end
         b.icon:SetTexCoord(0, 1, 0, 1)
         b.icon:SetAlpha(1)
         b.IconBorder:SetAlpha(P.quality and 1 or 0)
@@ -182,7 +189,7 @@ function ns.ShowLive()
 end
 
 -- Blizzard's own update of a bag item button, then the style on top
-function ns.UpdateLive(b)
+function ns.UpdateLive(b, owner)
     local bag, slot = b:GetBagID(), b:GetID()
     local info = C_Container.GetContainerItemInfo(bag, slot)
     local texture = info and info.iconFileID
@@ -203,14 +210,14 @@ function ns.UpdateLive(b)
     b:UpdateItemContextMatching()
     b:UpdateCooldown(texture)
     b:SetReadable(info and info.isReadable)
-    b:CheckUpdateTooltip(GameTooltip:GetOwner())
+    b:CheckUpdateTooltip(owner)
     b.tbMatches = not (info and info.isFiltered)
     ns.SetMatches(b, b.tbMatches)
 
     ns.UpdateLock(b, info)
     Paint(b, texture ~= nil, quality)
     local level
-    if info and ns.P.ilvl then
+    if info and ns.P.ilvl and IsGear(info.itemID) then
         level = C_Item.GetCurrentItemLevel(ItemLocation:CreateFromBagAndSlot(bag, slot))
     end
     ShowLevel(b, info and info.itemID, level, quality)
@@ -272,6 +279,6 @@ function ns.UpdateSaved(b, item, search)
     end
     ns.SetMatches(b, match)
     Paint(b, item ~= nil, item and item.quality)
-    local level = item and item.link and ns.P.ilvl and C_Item.GetDetailedItemLevelInfo(item.link)
+    local level = item and item.link and ns.P.ilvl and IsGear(id) and C_Item.GetDetailedItemLevelInfo(item.link)
     ShowLevel(b, id, level, item and item.quality)
 end

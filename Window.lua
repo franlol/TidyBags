@@ -569,6 +569,22 @@ end
 
 local function Rows(n, cols) return math.ceil(n / cols) end
 
+-- The slots each bag had at the last layout: a bag that changed size needs
+-- a new layout, the others only an update of their items
+local laidOut = {}
+local function SlotCount(bag)
+    if bag == Enum.BagIndex.Backpack then return ContainerFrame_GetContainerNumSlots(bag) end
+    if bag == ns.KEYRING then return ns.KeyringOn() and ns.BagSize(bag) or 0 end
+    return C_Container.GetContainerNumSlots(bag)
+end
+
+local function SizesChanged(bags)
+    for bag in pairs(bags) do
+        if laidOut[bag] ~= SlotCount(bag) then return true end
+    end
+    return false
+end
+
 -- The live buttons of the bags shown, plus the backpack's locked slots apart
 local function LiveList()
     local main, extra, reagent, keys = {}, {}, {}, {}
@@ -615,6 +631,7 @@ function ns.Layout()
     local step, s = size + gap, size / BUTTON
     cell.step, cell.gap = step, gap
     local live = IsLive()
+    for _, bag in ipairs(BAR_BAGS) do laidOut[bag] = SlotCount(bag) end
 
     -- header
     local top = isFlat and 36 or 62
@@ -793,37 +810,69 @@ end
 -------------------------------------------------------------------------------
 -- Items: live ones wait for their data, as Blizzard's bags do
 -------------------------------------------------------------------------------
-local function UpdateShown()
+-- bags: only the items of these bags ({ [bagID] = true }), nil: all of them
+local function UpdateShown(bags)
     if IsLive() then
-        for _, b in ipairs(shown) do ns.UpdateLive(b) end
+        local owner = GameTooltip:GetOwner()
+        for _, b in ipairs(shown) do
+            if not bags or bags[b:GetBagID()] then ns.UpdateLive(b, owner) end
+        end
     else
         for _, b in ipairs(shown) do ns.UpdateSaved(b, b.savedItem, search) end
     end
     if focusBag then ns.FocusBag(focusBag) end
 end
 
-function ns.UpdateItems()
+-- the bags changed since the last update (BAG_UPDATE), handled together
+-- once the game has sent them all (BAG_UPDATE_DELAYED)
+local dirty = {}
+
+function ns.UpdateItems(bags)
     if W.refresh then
         W.refresh:Cancel()
         W.refresh = nil
+        -- the one cancelled was waiting for other bags: all of them now
+        bags = nil
     end
     if not IsLive() then return UpdateShown() end
     local refresh = ContinuableContainer:Create()
     for _, b in ipairs(shown) do
-        local item = Item:CreateFromBagAndSlot(b:GetBagID(), b:GetID())
-        if not item:IsItemEmpty() then refresh:AddContinuable(item) end
+        if not bags or bags[b:GetBagID()] then
+            local item = Item:CreateFromBagAndSlot(b:GetBagID(), b:GetID())
+            if not item:IsItemEmpty() then refresh:AddContinuable(item) end
+        end
     end
     W.refresh = refresh
     refresh:ContinueOnLoad(function()
         W.refresh = nil
-        UpdateShown()
+        UpdateShown(bags)
     end)
+end
+
+-- The game's search: only whether each item matches (as Blizzard's bags)
+local function UpdateSearch()
+    for _, b in ipairs(shown) do
+        local info = C_Container.GetContainerItemInfo(b:GetBagID(), b:GetID())
+        b.tbMatches = not (info and info.isFiltered)
+        ns.SetMatches(b, b.tbMatches and (focusBag == nil or b:GetBagID() == focusBag))
+    end
 end
 
 function ns.Refresh()
     if not W:IsShown() then return end
+    wipe(dirty)
     ns.Layout()
     ns.UpdateItems()
+end
+
+local function UpdateDirty()
+    if not next(dirty) then return end
+    if SizesChanged(dirty) then return ns.Refresh() end
+    local bags = CopyTable(dirty)
+    wipe(dirty)
+    ns.UpdateItems(bags)
+    UpdateBagBar()
+    UpdateFooter()
 end
 
 -------------------------------------------------------------------------------
@@ -851,8 +900,9 @@ W:SetScript("OnHide", function()
 end)
 
 local events = {
-    BAG_UPDATE_DELAYED = "all", BAG_CONTAINER_UPDATE = "all", PLAYER_ACCOUNT_SECURED = "all",
-    INVENTORY_SEARCH_UPDATE = "items", QUEST_ACCEPTED = "items", UNIT_QUEST_LOG_CHANGED = "items",
+    BAG_UPDATE = "bag", BAG_UPDATE_DELAYED = "dirty",
+    BAG_CONTAINER_UPDATE = "all", PLAYER_ACCOUNT_SECURED = "all",
+    INVENTORY_SEARCH_UPDATE = "search", QUEST_ACCEPTED = "items", UNIT_QUEST_LOG_CHANGED = "items",
     BAG_NEW_ITEMS_UPDATED = "items", MERCHANT_SHOW = "items", MERCHANT_CLOSED = "items",
     ITEM_LOCK_CHANGED = "lock", BAG_UPDATE_COOLDOWN = "cooldown",
     PLAYER_MONEY = "footer", CURRENCY_DISPLAY_UPDATE = "footer",
@@ -861,15 +911,25 @@ local events = {
 local function OnEvent(_, event, a, b)
     if not W:IsShown() or not IsLive() then return end
     local what = events[event]
-    if what == "all" then
+    if what == "bag" then
+        if a and laidOut[a] then dirty[a] = true end
+    elseif what == "dirty" then
+        UpdateDirty()
+    elseif what == "all" then
         ns.Refresh()
+    elseif what == "search" then
+        UpdateSearch()
     elseif what == "items" then
         if event ~= "UNIT_QUEST_LOG_CHANGED" or a == "player" then ns.UpdateItems() end
     elseif what == "lock" then
-        local slots = a and b and ns.LiveButtons()[a]
-        local button = slots and slots[b]
-        if button and button:IsShown() then ns.UpdateLock(button) end
-        UpdateBagBar()
+        if b then
+            local slots = ns.LiveButtons()[a]
+            local button = slots and slots[b]
+            if button and button:IsShown() then ns.UpdateLock(button) end
+        else
+            -- an equipped bag (an inventory slot)
+            UpdateBagBar()
+        end
     elseif what == "cooldown" then
         for _, button in ipairs(shown) do button:UpdateCooldown(button:HasItem()) end
     else
