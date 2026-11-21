@@ -1,0 +1,23 @@
+## Interface: 16001
+## Title: TidyBags
+## Notes: All your bags in one clean window, with the reagent bag, search, sorting and your other characters' bags.
+## Notes-esES: Todas tus bolsas en una ventana limpia, con la bolsa de componentes, búsqueda, orden y las bolsas de tus otros personajes.
+## Notes-esMX: Todas tus bolsas en una ventana limpia, con la bolsa de componentes, búsqueda, orden y las bolsas de tus otros personajes.
+## Author: franlol
+## X-License: MIT
+## Version: @project-version@
+## IconTexture: Interface\Icons\INV_Misc_Bag_08
+## SavedVariables: TidyBagsDB
+
+Libs\LibStub\LibStub.lua
+Libs\LibFlatyUI-1.0\LibFlatyUI-1.0.lua
+
+Locales\Locale.lua
+Locales\esES.lua
+Core.lua
+Data.lua
+Tooltip.lua
+Buttons.lua
+Window.lua
+Blizzard.lua
+Options.lua
