@@ -11,4 +11,6 @@ externals:
 
 ignore:
   - README.md
+  - screenshots
+  - docs
   - Libs/LibDataBroker-1.1/README.textile
