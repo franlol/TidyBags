@@ -112,10 +112,11 @@ function ns.StyleTexts(b)
 end
 
 -- The game's search dimming on an item. It covers the item's marks; its
--- cooldown is a frame above the dimming, so it is hidden while dimmed
+-- cooldown is a frame above the dimming, so it fades to the same shade
+-- (the dimming is black at 80%)
 function ns.SetMatches(b, matches)
     b:SetMatchesSearch(matches)
-    if b.Cooldown then b.Cooldown:SetAlpha(matches and 1 or 0) end
+    if b.Cooldown then b.Cooldown:SetAlpha(matches and 1 or 0.2) end
 end
 
 -- every change of the settings styles the texts again
