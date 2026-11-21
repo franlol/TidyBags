@@ -745,7 +745,7 @@ function ns.Layout()
     local list = { charTool, bagsTool, sortTool }
     local box = isFlat and flatSearch or blizzSearch
     if isFlat then
-        UI.Backdrop(flat, T.window, T.windowBorder)
+        UI.Backdrop(flat, T.window, T.window)   -- no border: edge in the window color
         flat.title:SetText(name)
         local c = RAID_CLASS_COLORS[class]
         flat.title:SetTextColor(c and c.r or 1, c and c.g or 1, c and c.b or 1)
