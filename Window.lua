@@ -670,6 +670,11 @@ W:SetScript("OnShow", function()
 end)
 W:SetScript("OnHide", function()
     PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
+    -- items stop being new once the bags close (Blizzard does it when its
+    -- own bag frames hide, which never show now)
+    for bag, slots in pairs(ns.LiveButtons()) do
+        for slot in pairs(slots) do C_NewItems.RemoveNewItem(bag, slot) end
+    end
     flatSearch.edit:SetText("")
     flatSearch.edit:ClearFocus()
     viewing = nil
