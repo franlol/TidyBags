@@ -322,6 +322,17 @@ end
 ns.window:HookScript("OnShow", BagsToggled)
 ns.window:HookScript("OnHide", BagsToggled)
 
+-- Escape closes the options first (the game's own way for addon windows)
+if RegisterGameMenuEscHandler and GameMenuEscPriority then
+    RegisterGameMenuEscHandler(GameMenuEscPriority.AddOn, function()
+        if win and win:IsShown() then
+            win:Hide()
+            return true
+        end
+        return false
+    end)
+end
+
 function ns.ToggleOptions()
     if not win then
         Build()
