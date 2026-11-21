@@ -90,6 +90,28 @@ end
 -------------------------------------------------------------------------------
 -- Items
 -------------------------------------------------------------------------------
+-- getter / setter of a game setting saved by the server: the new value
+-- reads back a moment later, so the check shows the clicked value until it
+-- does (or for 2 s at most), then the window is refreshed
+local pending = {}
+local function GameSetting(get, set)
+    return function()
+        if pending[get] ~= nil then return pending[get] end
+        return C_Container[get]()
+    end, function(v)
+        pending[get] = v
+        C_Container[set](v)
+        local tries = 20
+        C_Timer.NewTicker(0.1, function(ticker)
+            tries = tries - 1
+            if C_Container[get]() == v or tries == 0 then
+                pending[get] = nil
+                ticker:Cancel()
+                UI.RefreshAll()
+            end
+        end, 20)
+    end
+end
 local function BuildItems(container)
     local page = UI.Page(container, 2)
 
@@ -109,12 +131,8 @@ local function BuildItems(container)
 
     -- the game's own settings (every character)
     card = page:Add(2, UI.Card(page.content, L["Sorting"], L["Game settings, for every character."]))
-    card:Add(UI.Check(card, L["Sort from right to left"],
-        function() return C_Container.GetSortBagsRightToLeft() end,
-        function(v) C_Container.SetSortBagsRightToLeft(v) end))
-    card:Add(UI.Check(card, L["Loot into the leftmost bag"],
-        function() return C_Container.GetInsertItemsLeftToRight() end,
-        function(v) C_Container.SetInsertItemsLeftToRight(v) end))
+    card:Add(UI.Check(card, L["Sort from right to left"], GameSetting("GetSortBagsRightToLeft", "SetSortBagsRightToLeft")))
+    card:Add(UI.Check(card, L["Loot into the leftmost bag"], GameSetting("GetInsertItemsLeftToRight", "SetInsertItemsLeftToRight")))
 
     page:Layout()
 end
