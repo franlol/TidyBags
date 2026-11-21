@@ -19,7 +19,7 @@
 - [ ] Reagent bag: apart (title + free count) or with the rest
 - [ ] Keyring (once the character has a key): apart or with the rest; rows of 4 that grow as it fills; its slot in the bag slots row takes a key from the cursor; the keyring button of the bag bar opens the window
 - [ ] No authenticator: 4 locked slots at the end and the add-slots button (its popup)
-- [ ] Bag slots row: hover highlights that bag's items; drag a bag out and in;
+- [ ] Bag slots row: hover dims the other bags' items with the search dimming, marks and glows covered too (search state comes back on leave); drag a bag out and in;
       right click shows the game's bag options
 - [ ] Sort button sorts; right click shows the cleanup options
 - [ ] Bag slots row: same size and spacing as the item slots; shown bags: accent border (Flaty) or the bag bar's open-bag highlight (Blizzard); click a bag (backpack, bags, reagent bag, keyring) hides its slots and dims it like a search miss; click again shows them; the free count follows; an item on the cursor still goes into the bag; old "Hidden" reagent/keyring settings show as unchecked bags

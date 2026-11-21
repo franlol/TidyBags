@@ -466,11 +466,13 @@ local PAD = 10
 local shown = {}       -- the live buttons in the grid, in order
 local focusBag
 
+-- A bag hovered in the bag slots row: the other bags' items get the game's
+-- search dimming (it covers their marks too); the rest keep their search state
 function ns.FocusBag(bag)
     focusBag = bag
     if not IsLive() then return end
     for _, b in ipairs(shown) do
-        b:SetAlpha((bag == nil or b:GetBagID() == bag) and 1 or 0.25)
+        b:SetMatchesSearch(b.tbMatches ~= false and (bag == nil or b:GetBagID() == bag))
     end
 end
 
