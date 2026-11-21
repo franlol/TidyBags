@@ -29,6 +29,10 @@ function ns.KeyringOn()
     return C_ActionBar.ShouldShowKeyring() and GetCVarBool("showKeyring")
 end
 
+-- the texts' font: Flaty's Oswald (the game's Arial Narrow without it)
+local Flaty = LibStub("LibFlatyUI-1.0")
+local FONT = Flaty.Media and Flaty.Media("font", "Flaty: Oswald") or "Fonts\\ARIALN.TTF"
+
 ns.defaults = {
     enabled = true,         -- off: the game's own bags
     style = "flaty",        -- "flaty" or "blizzard"
@@ -39,7 +43,7 @@ ns.defaults = {
     reagents = "separate",  -- the reagent bag: "separate" or "together" (in the grid)
     keyring = "separate",   -- the keyring: the same choices
     hiddenBags = {},        -- [bagID] = true: its slots are not shown (bag slots row)
-    bagBar = false,         -- the equipped bags above the items
+    bagBar = true,          -- the equipped bags above the items
     locked = false,         -- the window can't be dragged
     pos = { point = "BOTTOMRIGHT", x = -60, y = 110 },
     ilvl = true,            -- item level on equipment
@@ -49,8 +53,8 @@ ns.defaults = {
     -- the texts on the items: font, size (px on screen), outline, and the
     -- point of the item they sit at, with an offset (px)
     texts = {
-        count = { font = "Fonts\\ARIALN.TTF", size = 14, outline = "OUTLINE", point = "BOTTOMRIGHT", x = -2, y = 2 },
-        ilvl = { font = "Fonts\\ARIALN.TTF", size = 12, outline = "OUTLINE", point = "TOPLEFT", x = 2, y = -2 },
+        count = { font = FONT, size = 12, outline = "THICKOUTLINE", point = "BOTTOMRIGHT", x = -2, y = 2 },
+        ilvl = { font = FONT, size = 12, outline = "OUTLINE", point = "TOPLEFT", x = 3, y = -4 },
     },
 }
 
