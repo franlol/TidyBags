@@ -476,19 +476,18 @@ end
 
 -- The style's look on a bag slot button, drawn as the item slots (same size
 -- and border, so the same spacing). Shown: accent border (Flaty) or the
--- game's checked glow (Blizzard). Hidden: grey and faded
+-- highlight Blizzard's bag bar puts on an open bag (Blizzard). Hidden: the
+-- game's search dimming, as its bag bar does with a bag that does not match
 function ns.PaintBag(b, on)
     local isFlat = ns.P.style == "flaty"
     ns.Paint(b, true, nil, isFlat and (on and T.accent or { 0, 0, 0 }) or nil)
     if not b.tbChecked then
         b.tbChecked = b:CreateTexture(nil, "OVERLAY", nil, 1)
         b.tbChecked:SetAllPoints()
-        b.tbChecked:SetTexture("Interface\\Buttons\\CheckButtonHilight")
-        b.tbChecked:SetBlendMode("ADD")
+        b.tbChecked:SetAtlas("ui-hud-actionbar-iconframe-bags")
     end
     b.tbChecked:SetShown(on and not isFlat)
-    b.icon:SetDesaturated(not on)
-    b:SetAlpha(on and 1 or 0.4)
+    b:SetMatchesSearch(on)
 end
 
 -- Places a button in the grid: index i of a block starting at y (px)

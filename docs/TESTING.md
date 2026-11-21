@@ -22,7 +22,7 @@
 - [ ] Bag slots row: hover highlights that bag's items; drag a bag out and in;
       right click shows the game's bag options
 - [ ] Sort button sorts; right click shows the cleanup options
-- [ ] Bag slots row: same size and spacing as the item slots; shown bags: accent border (Flaty) or checked glow (Blizzard); click a bag (backpack, bags, reagent bag, keyring) hides its slots and greys it; click again shows them; the free count follows; an item on the cursor still goes into the bag; old "Hidden" reagent/keyring settings show as unchecked bags
+- [ ] Bag slots row: same size and spacing as the item slots; shown bags: accent border (Flaty) or the bag bar's open-bag highlight (Blizzard); click a bag (backpack, bags, reagent bag, keyring) hides its slots and dims it like a search miss; click again shows them; the free count follows; an item on the cursor still goes into the bag; old "Hidden" reagent/keyring settings show as unchecked bags
 
 ## Characters
 - [ ] Another character appears after it logs in once
