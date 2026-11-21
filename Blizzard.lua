@@ -56,6 +56,16 @@ ns.Module(function()
         "ToggleBackpack", "OpenBag", "CloseBag", "ToggleBag" }) do
         hooksecurefunc(name, Queue)
     end
+    -- One window holds every bag, so a bag button (or key) opens or closes
+    -- them all, like the bags key: Blizzard toggled just that bag; all of
+    -- them close if the window was open, else all of them open. (The window
+    -- follows a frame later, so it still shows the state before the click.)
+    hooksecurefunc("ToggleBag", function()
+        if not ns.P.enabled then return end
+        local wasOpen = ns.window:IsShown()
+        CloseAllBags()
+        if not wasOpen then OpenAllBags() end
+    end)
     for _, f in ipairs(BagFrames()) do
         hooksecurefunc(f, "Show", Queue)
         hooksecurefunc(f, "Hide", Queue)

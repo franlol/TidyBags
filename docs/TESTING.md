@@ -1,7 +1,7 @@
 # In-game checklist
 
 ## Opening
-- [ ] B, the backpack button and each bag button open and close the window
+- [ ] B, the backpack button and each bag button open and close the window; any bag button closes it when open (also a different bag than the one that opened it), and B works after it
 - [ ] Escape closes it; the close button closes it
 - [ ] Opens by itself at a vendor and at a mailbox, closes when leaving
 - [ ] No Blizzard bag frame shows at any time
