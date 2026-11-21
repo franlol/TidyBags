@@ -30,7 +30,8 @@
 - [ ] Forgetting a character in options removes it
 
 ## Options
-- [ ] Enabled off: the bags close, B opens Blizzard's own bags (they update, sort, search), no tooltip counts, other options greyed; on again: TidyBags
+- [ ] Enabled on/off with the bags open: they stay open in the other look; closed: they stay closed
+- [ ] Enabled off: B opens Blizzard's own bags (they update, sort, search), no tooltip counts, other options greyed; on again: TidyBags
 - [ ] Every change shows at once on the open bags, both looks
 - [ ] Columns, item size, spacing, scale; lock position; reset position
 - [ ] Texts: count and item level font, size, outline, position and offsets; they keep their size on screen when the item size changes; Reset

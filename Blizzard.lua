@@ -57,9 +57,13 @@ ns.Module(function()
         hooksecurefunc(f, "SetShown", Queue)
     end
 end, function()
-    -- turned on or off: the bags close, and open again in the other look
-    if wasEnabled ~= nil and wasEnabled ~= ns.P.enabled then CloseAllBags() end
+    -- turned on or off: open bags close and open again in the other look
+    -- (Blizzard's frames run their show and hide code while seen)
+    local switched = wasEnabled ~= nil and wasEnabled ~= ns.P.enabled
+    local wasOpen = switched and IsAnyBagOpen()
+    if switched then CloseAllBags() end
     wasEnabled = ns.P.enabled
     Reparent()
+    if wasOpen then OpenAllBags() end
     Queue()
 end)
