@@ -765,10 +765,11 @@ W:SetScript("OnShow", function()
 end)
 W:SetScript("OnHide", function()
     PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
-    -- items stop being new once the bags close (Blizzard does it when its
-    -- own bag frames hide, which never show now)
-    for bag, slots in pairs(ns.LiveButtons()) do
-        for slot in pairs(slots) do C_NewItems.RemoveNewItem(bag, slot) end
+    -- the items that were in sight stop being new once the bags close
+    -- (Blizzard does it when its own bag frames hide, which never show now);
+    -- the ones in unchecked bags stay new
+    if IsLive() then
+        for _, b in ipairs(shown) do C_NewItems.RemoveNewItem(b:GetBagID(), b:GetID()) end
     end
     flatSearch.edit:SetText("")
     flatSearch.edit:ClearFocus()
