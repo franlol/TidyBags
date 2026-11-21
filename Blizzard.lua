@@ -6,7 +6,8 @@
 -- its own functions. While TidyBags is on, its bag frames live under a hidden
 -- parent (they still open and close, unseen), and TidyBags' window shows
 -- while any of them is open. Closing the window closes Blizzard's bags.
--- Off, Blizzard's frames are back under UIParent and nothing else changes.
+-- Off, Blizzard's frames are back under their own parent and nothing else
+-- changes.
 -------------------------------------------------------------------------------
 
 local _, ns = ...
@@ -22,9 +23,13 @@ local function BagFrames()
     return list
 end
 
+-- Each frame's own parent (ContainerFrameContainer or UIParent), taken
+-- before TidyBags moves it: off, every frame goes back exactly there
+local original = {}
 local function Reparent()
-    local parent = ns.P.enabled and hidden or UIParent
     for _, f in ipairs(BagFrames()) do
+        if not original[f] then original[f] = f:GetParent() or UIParent end
+        local parent = ns.P.enabled and hidden or original[f]
         if f:GetParent() ~= parent then FrameUtil.SetParentMaintainRenderLayering(f, parent) end
     end
 end
