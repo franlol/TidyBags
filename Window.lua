@@ -41,10 +41,24 @@ local function Close() CloseAllBags() end
 local function DragStart()
     if not ns.P.locked then W:StartMoving() end
 end
+-- The window is held by its top right corner, so it grows and shrinks
+-- downwards (and to the left) without its top moving
+local function Anchor()
+    local pos = ns.P.pos
+    W:ClearAllPoints()
+    W:SetPoint(pos.point, UIParent, pos.rel or pos.point, pos.x, pos.y)
+end
+
+local function SaveCorner()
+    local right, top = W:GetRight(), W:GetTop()
+    if not right or not top then return end
+    ns.P.pos = { point = "TOPRIGHT", rel = "BOTTOMLEFT", x = right, y = top }
+end
+
 local function DragStop()
     W:StopMovingOrSizing()
-    local point, _, _, x, y = W:GetPoint()
-    ns.P.pos = { point = point, x = x, y = y }
+    SaveCorner()
+    Anchor()
 end
 local function Draggable(f)
     f:EnableMouse(true)
@@ -658,8 +672,13 @@ function ns.Layout()
 
     W:SetSize(width, bottom + 16 + PAD)
     W:SetScale(P.scale / 100)
-    W:ClearAllPoints()
-    W:SetPoint(P.pos.point, UIParent, P.pos.point, P.pos.x, P.pos.y)
+    Anchor()
+    -- a place saved by another corner (the default, older settings): the
+    -- same place, held by the top right corner from now on
+    if P.pos.point ~= "TOPRIGHT" or P.pos.rel ~= "BOTTOMLEFT" then
+        SaveCorner()
+        Anchor()
+    end
 
     -- header contents
     local name = data and data.name or ns.CharName()
@@ -765,12 +784,6 @@ W:SetScript("OnShow", function()
 end)
 W:SetScript("OnHide", function()
     PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
-    -- the items that were in sight stop being new once the bags close
-    -- (Blizzard does it when its own bag frames hide, which never show now);
-    -- the ones in unchecked bags stay new
-    if IsLive() then
-        for _, b in ipairs(shown) do C_NewItems.RemoveNewItem(b:GetBagID(), b:GetID()) end
-    end
     flatSearch.edit:SetText("")
     flatSearch.edit:ClearFocus()
     viewing = nil

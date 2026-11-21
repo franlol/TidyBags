@@ -10,7 +10,7 @@
 - [ ] Right click uses, equips and sells; Shift-click splits; drag and drop works
 - [ ] Ctrl-click dresses up, Shift-click links in chat
 - [ ] Items used in combat work, no "blocked action" (`/console taintLog 1`)
-- [ ] New items glow; quest items show their mark; cooldowns spin
+- [ ] New items glow until hovered (they keep glowing after closing; the reagent bag's stop when the bags close, the game does it); quest items show their mark; cooldowns spin
 - [ ] Junk shows the coin at a vendor and is grey when the option is on
 - [ ] Item level on equipment; quality border on and off, both looks
 - [ ] Search greys what does not match; cleared when the window closes
@@ -35,5 +35,6 @@
 - [ ] Enabled off: B opens Blizzard's own bags (they update, sort, search), no tooltip counts, other options greyed; on again: TidyBags
 - [ ] Every change shows at once on the open bags, both looks
 - [ ] Columns, item size, spacing, scale; lock position; reset position
+- [ ] The window's top stays put when it grows or shrinks (bag toggles, item size, columns); dragging keeps the new place after a reload
 - [ ] Texts: count and item level font, size, outline, position and offsets; they keep their size on screen when the item size changes; Reset
 - [ ] Profiles: new, copy, reset, delete; language switch rebuilds the window
