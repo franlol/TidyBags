@@ -187,8 +187,19 @@ blizzSearch:HookScript("OnTextChanged", function(self) OnSearch(self:GetText()) 
 -- Items
 -------------------------------------------------------------------------------
 local grid = CreateFrame("Frame", nil, content)
-local reagentTitle = UI.Text(content, "", "GameFontNormalSmall")
-local reagentFree = UI.Text(content, "", "GameFontHighlightSmall")
+-- the sections apart from the grid (reagent bag, keyring): their name and
+-- free slots
+local sectionTexts = {}
+local function SectionTexts(i)
+    local t = sectionTexts[i]
+    if not t then
+        t = { title = UI.Text(content, "", "GameFontNormalSmall"), free = UI.Text(content, "", "GameFontHighlightSmall") }
+        sectionTexts[i] = t
+    end
+    return t
+end
+-- the sections of the last layout: { bag, mode, texts (when apart) }
+local layoutSections = {}
 
 -- the equipped bags
 local bagBar = CreateFrame("Frame", nil, content)
@@ -198,10 +209,35 @@ local function InvSlot(bag)
     return C_Container.ContainerIDToInventoryID(bag)
 end
 
+-- Free slots of a bag: live, or saved (data)
+local function FreeSlots(bag, data)
+    if data then
+        local saved = data.bags and data.bags[bag]
+        if not saved then return 0 end
+        local n = saved.size
+        for slot in pairs(saved.items) do
+            if slot <= saved.size then n = n - 1 end
+        end
+        return n
+    end
+    if bag == ns.KEYRING then
+        if not ns.KeyringOn() then return 0 end
+        local size = ns.BagSize(bag)
+        local n = size
+        for slot = 1, size do
+            if C_Container.GetContainerItemInfo(bag, slot) then n = n - 1 end
+        end
+        return n
+    end
+    return C_Container.GetContainerNumFreeSlots(bag)
+end
+
 local function BagEnter(self)
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
     local bag = self.bag
-    if not IsLive() then
+    if bag == ns.KEYRING then
+        GameTooltip:SetText(KEYRING, 1, 1, 1)
+    elseif not IsLive() then
         if self.link then GameTooltip:SetHyperlink(self.link) else GameTooltip:SetText(EQUIP_CONTAINER, 1, 1, 1) end
     elseif bag == Enum.BagIndex.Backpack then
         GameTooltip:SetText(BACKPACK_TOOLTIP, 1, 1, 1)
@@ -221,7 +257,10 @@ end
 local function BagClick(self, button)
     if not IsLive() then return end
     local bag = self.bag
-    if button == "RightButton" then
+    if bag == ns.KEYRING then
+        -- a key on the cursor goes into the first free key slot
+        if button ~= "RightButton" and CursorHasItem() then PutKeyInKeyRing() end
+    elseif button == "RightButton" then
         MenuUtil.CreateContextMenu(self, function(_, root)
             ContainerFrame_AddButtons_BagFilters(root, bag)
             ContainerFrame_AddButtons_BagCleanup(root, bag)
@@ -232,10 +271,14 @@ local function BagClick(self, button)
 end
 
 local function BagDrag(self)
-    if IsLive() and self.bag ~= Enum.BagIndex.Backpack then PickupBagFromSlot(InvSlot(self.bag)) end
+    if IsLive() and self.bag ~= Enum.BagIndex.Backpack and self.bag ~= ns.KEYRING then
+        PickupBagFromSlot(InvSlot(self.bag))
+    end
 end
 
-for i, bag in ipairs(ns.AllBags()) do
+local BAR_BAGS = ns.AllBags()
+BAR_BAGS[#BAR_BAGS + 1] = ns.KEYRING
+for i, bag in ipairs(BAR_BAGS) do
     local b = CreateFrame("ItemButton", "TidyBagsBagSlot" .. bag, bagBar)
     b.bag = bag
     b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -250,12 +293,22 @@ end
 
 local EMPTY_BAG = "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
 local BACKPACK = "Interface\\Buttons\\Button-Backpack-Up"
+local KEY = "Interface\\Icons\\INV_Misc_Key_03"
+
+-- The keyring's slot shows when the character has a keyring
+local function HasKeyring(data)
+    if data then return data.bags and data.bags[ns.KEYRING] ~= nil end
+    return ns.KeyringOn()
+end
 
 local function UpdateBagBar()
     local data = not IsLive() and ns.CharData(viewing)
     for _, b in ipairs(bagButtons) do
         local bag, icon, free = b.bag, nil, nil
-        if data then
+        if bag == ns.KEYRING then
+            icon = KEY
+            if HasKeyring(data) then free = FreeSlots(bag, data) end
+        elseif data then
             local saved = data.bags and data.bags[bag]
             b.link = saved and saved.link
             icon = bag == Enum.BagIndex.Backpack and BACKPACK
@@ -346,20 +399,15 @@ local function UpdateFooter()
     local data = not IsLive() and ns.CharData(viewing)
     money.text:SetText(GetMoneyString((data and data.money) or (not data and GetMoney()) or 0, true))
 
-    local free, freeReagent = 0, 0
-    if data then
-        for bag, saved in pairs(data.bags or {}) do
-            local n = saved.size
-            for _ in pairs(saved.items) do n = n - 1 end
-            if bag == ns.REAGENT_BAG then freeReagent = n else free = free + n end
-        end
-    else
-        for _, bag in ipairs(ns.BAGS) do free = free + C_Container.GetContainerNumFreeSlots(bag) end
-        freeReagent = C_Container.GetContainerNumFreeSlots(ns.REAGENT_BAG)
+    -- the grid's free slots; a section apart shows its own
+    local free = 0
+    for _, bag in ipairs(ns.BAGS) do free = free + FreeSlots(bag, data) end
+    for _, sec in ipairs(layoutSections) do
+        local n = FreeSlots(sec.bag, data)
+        if sec.mode == "together" then free = free + n end
+        if sec.texts then sec.texts.free:SetFormattedText(L["%d free"], n) end
     end
-    if ns.P.reagents == "together" then free = free + freeReagent end
     freeText:SetFormattedText(L["%d free"], free)
-    reagentFree:SetFormattedText(L["%d free"], freeReagent)
 
     auth:SetShown(not data and not IsAccountSecured())
 
@@ -445,19 +493,24 @@ local function LiveList()
         reagent[#reagent + 1] = ns.LiveButton(ns.REAGENT_BAG, slot, grid)
     end
     for _, b in ipairs(extra) do main[#main + 1] = b end
-    return main, reagent
+    local keys = {}
+    if ns.KeyringOn() then
+        for slot = 1, ns.BagSize(ns.KEYRING) do keys[#keys + 1] = ns.LiveButton(ns.KEYRING, slot, grid) end
+    end
+    return main, reagent, keys
 end
 
 -- Saved items of a character, as { item or false } lists
 local function SavedList(data)
-    local main, reagent = {}, {}
+    local main, reagent, keys = {}, {}, {}
     local function Add(list, bag)
         local saved = data.bags and data.bags[bag]
         for slot = 1, saved and saved.size or 0 do list[#list + 1] = saved.items[slot] or false end
     end
     for _, bag in ipairs(ns.BAGS) do Add(main, bag) end
     Add(reagent, ns.REAGENT_BAG)
-    return main, reagent
+    Add(keys, ns.KEYRING)
+    return main, reagent, keys
 end
 
 function ns.Layout()
@@ -470,51 +523,65 @@ function ns.Layout()
     -- header
     local top = isFlat and 36 or 62
     local left = isFlat and PAD or PAD
+    local data = not live and ns.CharData(viewing)
     if P.bagBar then
         bagBar:Show()
         bagBar:ClearAllPoints()
         bagBar:SetPoint("TOPLEFT", W, "TOPLEFT", left, -top)
-        bagBar:SetSize(#bagButtons * step, size)
-        for i, b in ipairs(bagButtons) do
-            b:SetScale(s)
-            b:ClearAllPoints()
-            b:SetPoint("TOPLEFT", bagBar, "TOPLEFT", (i - 1) * step / s, 0)
+        local n = 0
+        for _, b in ipairs(bagButtons) do
+            local on = b.bag ~= ns.KEYRING or HasKeyring(data)
+            b:SetShown(on)
+            if on then
+                b:SetScale(s)
+                b:ClearAllPoints()
+                b:SetPoint("TOPLEFT", bagBar, "TOPLEFT", n * step / s, 0)
+                n = n + 1
+            end
         end
+        bagBar:SetSize(n * step, size)
         top = top + size + 8
     else
         bagBar:Hide()
     end
 
-    -- items
-    local main, reagent
-    local data = not live and ns.CharData(viewing)
+    -- items: the grid, then the reagent bag and the keyring (each apart,
+    -- in the grid, or hidden)
+    local main, reagent, keys
     if live then
         ns.ShowLive()
         ns.HideSaved()
-        main, reagent = LiveList()
+        main, reagent, keys = LiveList()
+    else
+        ns.HideLive()
+        main, reagent, keys = SavedList(data or {})
+    end
+    wipe(layoutSections)
+    layoutSections[1] = { bag = ns.REAGENT_BAG, mode = P.reagents, list = reagent, title = L["Reagents"] }
+    layoutSections[2] = { bag = ns.KEYRING, mode = P.keyring, list = keys, title = L["Keyring"] }
+
+    local all = {}
+    for _, x in ipairs(main) do all[#all + 1] = x end
+    for _, sec in ipairs(layoutSections) do
+        if sec.mode == "together" then
+            for _, x in ipairs(sec.list) do all[#all + 1] = x end
+        end
+    end
+
+    if live then
         -- hide only the buttons that left (a hidden button loses its tooltip)
         local used = {}
-        for _, b in ipairs(main) do used[b] = true end
-        if P.reagents ~= "hidden" then
-            for _, b in ipairs(reagent) do used[b] = true end
+        for _, b in ipairs(all) do used[b] = true end
+        for _, sec in ipairs(layoutSections) do
+            if sec.mode == "separate" then
+                for _, b in ipairs(sec.list) do used[b] = true end
+            end
         end
         for _, slots in pairs(ns.LiveButtons()) do
             for _, b in pairs(slots) do
                 if not used[b] then b:Hide() end
             end
         end
-    else
-        ns.HideLive()
-        main, reagent = SavedList(data or {})
-    end
-
-    local together = P.reagents == "together"
-    local separate = P.reagents == "separate" and #reagent > 0
-    local all = main
-    if together then
-        all = {}
-        for _, x in ipairs(main) do all[#all + 1] = x end
-        for _, x in ipairs(reagent) do all[#all + 1] = x end
     end
 
     wipe(shown)
@@ -533,18 +600,23 @@ function ns.Layout()
     for i, x in ipairs(all) do Put(x, i, 0) end
     local height = Rows(#all, cols) * step - gap
 
-    reagentTitle:SetShown(separate)
-    reagentFree:SetShown(separate)
-    if separate then
-        local y = height + 12
-        reagentTitle:ClearAllPoints()
-        reagentTitle:SetPoint("TOPLEFT", grid, "TOPLEFT", 0, -y)
-        reagentTitle:SetText(L["Reagents"])
-        reagentFree:ClearAllPoints()
-        reagentFree:SetPoint("TOPRIGHT", grid, "TOPRIGHT", 0, -y)
-        y = y + 16
-        for i, x in ipairs(reagent) do Put(x, i, y) end
-        height = y + Rows(#reagent, cols) * step - gap
+    for i, sec in ipairs(layoutSections) do
+        local texts = SectionTexts(i)
+        local apart = sec.mode == "separate" and #sec.list > 0
+        texts.title:SetShown(apart)
+        texts.free:SetShown(apart)
+        if apart then
+            sec.texts = texts
+            local y = height + 12
+            texts.title:ClearAllPoints()
+            texts.title:SetPoint("TOPLEFT", grid, "TOPLEFT", 0, -y)
+            texts.title:SetText(sec.title)
+            texts.free:ClearAllPoints()
+            texts.free:SetPoint("TOPRIGHT", grid, "TOPRIGHT", 0, -y)
+            y = y + 16
+            for k, x in ipairs(sec.list) do Put(x, k, y) end
+            height = y + Rows(#sec.list, cols) * step - gap
+        end
     end
     if not live then ns.HideSaved(savedIndex + 1) end
 
@@ -608,8 +680,10 @@ function ns.Layout()
         box:SetPoint("TOPLEFT", W, "TOPLEFT", 64, -32)
         box:SetPoint("RIGHT", list[#list], "LEFT", -8, 0)
     end
-    reagentTitle:SetFontObject(isFlat and "GameFontNormalSmall" or "GameFontNormal")
-    if isFlat then reagentTitle:SetTextColor(unpack(T.accent)) else reagentTitle:SetTextColor(1, 0.82, 0) end
+    for _, texts in ipairs(sectionTexts) do
+        texts.title:SetFontObject(isFlat and "GameFontNormalSmall" or "GameFontNormal")
+        if isFlat then texts.title:SetTextColor(unpack(T.accent)) else texts.title:SetTextColor(1, 0.82, 0) end
+    end
 
     UpdateBagBar()
     UpdateFooter()

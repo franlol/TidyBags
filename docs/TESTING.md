@@ -17,6 +17,7 @@
 
 ## Bags
 - [ ] Reagent bag: apart (title + free count), with the rest, hidden
+- [ ] Keyring (once the character has a key): apart, with the rest, hidden; rows of 4 that grow as it fills; its slot in the bag slots row takes a key from the cursor; the keyring button of the bag bar opens the window
 - [ ] No authenticator: 4 locked slots at the end and the add-slots button (its popup)
 - [ ] Bag slots row: hover highlights that bag's items; drag a bag out and in;
       right click shows the game's bag options

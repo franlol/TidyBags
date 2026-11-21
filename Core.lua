@@ -20,6 +20,13 @@ ns.ACCENT = { 0.96, 0.72, 0.32 }
 -- Bag IDs: the backpack and the four bag slots, then the reagent bag
 ns.BAGS = { 0, 1, 2, 3, 4 }
 ns.REAGENT_BAG = Enum.BagIndex.ReagentBag
+ns.KEYRING = Enum.BagIndex.Keyring
+
+-- The keyring exists when the game has it on and shows once the character
+-- has had a key (the game's own rule for its keyring button)
+function ns.KeyringOn()
+    return C_ActionBar.ShouldShowKeyring() and GetCVarBool("showKeyring")
+end
 
 ns.defaults = {
     style = "flaty",        -- "flaty" or "blizzard"
@@ -28,6 +35,7 @@ ns.defaults = {
     spacing = 4,            -- space between items (px)
     scale = 100,            -- window scale (%)
     reagents = "separate",  -- the reagent bag: "separate", "together" or "hidden"
+    keyring = "separate",   -- the keyring: the same choices
     bagBar = false,         -- the equipped bags above the items
     locked = false,         -- the window can't be dragged
     pos = { point = "BOTTOMRIGHT", x = -60, y = 110 },

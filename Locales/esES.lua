@@ -18,6 +18,7 @@ ns.translations.esES = {
     ["Bag slots"] = "Bolsas equipadas",
     ["Characters"] = "Personajes",
     ["Reagents"] = "Componentes",
+    ["Keyring"] = "Llavero",
     ["Total"] = "Total",
 
     -- Options

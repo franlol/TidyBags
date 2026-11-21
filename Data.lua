@@ -23,13 +23,18 @@ local function AllBags()
 end
 ns.AllBags = AllBags
 
+-- The keyring shows only the rows of 4 its keys need (the game's size)
+function ns.BagSize(bag)
+    if bag == ns.KEYRING then return GetKeyRingSize() end
+    return C_Container.GetContainerNumSlots(bag)
+end
+
 local function SaveBag(bags, bag)
-    local size = C_Container.GetContainerNumSlots(bag)
-    local saved = { size = size, items = {} }
-    if bag ~= 0 then
+    local saved = { size = ns.BagSize(bag), items = {} }
+    if bag ~= 0 and bag ~= ns.KEYRING then
         saved.link = GetInventoryItemLink("player", C_Container.ContainerIDToInventoryID(bag))
     end
-    for slot = 1, size do
+    for slot = 1, C_Container.GetContainerNumSlots(bag) do
         local info = C_Container.GetContainerItemInfo(bag, slot)
         if info then
             saved.items[slot] = { id = info.itemID, link = info.hyperlink, count = info.stackCount,
@@ -48,6 +53,7 @@ local function Save()
     me.money = GetMoney()
     me.bags = {}
     for _, bag in ipairs(AllBags()) do SaveBag(me.bags, bag) end
+    if ns.KeyringOn() then SaveBag(me.bags, ns.KEYRING) end
     counts[ns.charKey] = nil
 end
 

@@ -129,6 +129,12 @@ local function BuildItems(container)
         { "separate", L["Separate"] }, { "together", L["With the rest"] }, { "hidden", L["Hidden"] },
     }, g, s))
 
+    card = page:Add(1, UI.Card(page.content, L["Keyring"]))
+    g, s = Bind("keyring")
+    card:Add(UI.Segmented(card, nil, {
+        { "separate", L["Separate"] }, { "together", L["With the rest"] }, { "hidden", L["Hidden"] },
+    }, g, s, { enableIf = ns.KeyringOn }))
+
     -- the game's own settings (every character)
     card = page:Add(2, UI.Card(page.content, L["Sorting"], L["Game settings, for every character."]))
     card:Add(UI.Check(card, L["Sort from right to left"], GameSetting("GetSortBagsRightToLeft", "SetSortBagsRightToLeft")))
