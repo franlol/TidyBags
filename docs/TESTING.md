@@ -16,12 +16,13 @@
 - [ ] Search greys what does not match; cleared when the window closes
 
 ## Bags
-- [ ] Reagent bag: apart (title + free count), with the rest, hidden
-- [ ] Keyring (once the character has a key): apart, with the rest, hidden; rows of 4 that grow as it fills; its slot in the bag slots row takes a key from the cursor; the keyring button of the bag bar opens the window
+- [ ] Reagent bag: apart (title + free count) or with the rest
+- [ ] Keyring (once the character has a key): apart or with the rest; rows of 4 that grow as it fills; its slot in the bag slots row takes a key from the cursor; the keyring button of the bag bar opens the window
 - [ ] No authenticator: 4 locked slots at the end and the add-slots button (its popup)
 - [ ] Bag slots row: hover highlights that bag's items; drag a bag out and in;
       right click shows the game's bag options
 - [ ] Sort button sorts; right click shows the cleanup options
+- [ ] Bag slots row: click a bag (backpack, bags, reagent bag, keyring) hides its slots and greys it; click again shows them; the free count follows; an item on the cursor still goes into the bag; old "Hidden" reagent/keyring settings show as unchecked bags
 
 ## Characters
 - [ ] Another character appears after it logs in once

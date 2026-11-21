@@ -2,7 +2,8 @@
 
 All your bags in one clean window, for WoW Forever.
 
-- Backpack and bags in one grid; the reagent bag and the keyring apart, with the rest, or hidden
+- Backpack and bags in one grid; the reagent bag and the keyring apart or with the rest
+- Bag slots row: click a bag to hide or show its slots
 - The backpack's extra slots shown locked until an authenticator unlocks them
 - The game's search, sorting and bag options (right click a bag or the sort button)
 - Item level, quality borders, grey junk

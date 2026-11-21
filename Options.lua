@@ -142,13 +142,13 @@ local function BuildItems(container)
     card = page:Add(1, UI.Card(page.content, L["Reagent bag"]))
     g, s = Bind("reagents")
     card:Add(UI.Segmented(card, nil, {
-        { "separate", L["Separate"] }, { "together", L["With the rest"] }, { "hidden", L["Hidden"] },
+        { "separate", L["Separate"] }, { "together", L["With the rest"] },
     }, g, s, O()))
 
     card = page:Add(1, UI.Card(page.content, L["Keyring"]))
     g, s = Bind("keyring")
     card:Add(UI.Segmented(card, nil, {
-        { "separate", L["Separate"] }, { "together", L["With the rest"] }, { "hidden", L["Hidden"] },
+        { "separate", L["Separate"] }, { "together", L["With the rest"] },
     }, g, s, O({ enableIf = ns.KeyringOn })))
 
     -- the game's own settings (every character)

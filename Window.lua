@@ -254,19 +254,29 @@ local function BagLeave()
     ns.FocusBag(nil)
 end
 
+-- Click: shows or hides the bag's slots. With an item on the cursor it goes
+-- into the bag (a key into the keyring); right click: the game's bag options
 local function BagClick(self, button)
-    if not IsLive() then return end
     local bag = self.bag
-    if bag == ns.KEYRING then
-        -- a key on the cursor goes into the first free key slot
-        if button ~= "RightButton" and CursorHasItem() then PutKeyInKeyRing() end
-    elseif button == "RightButton" then
-        MenuUtil.CreateContextMenu(self, function(_, root)
-            ContainerFrame_AddButtons_BagFilters(root, bag)
-            ContainerFrame_AddButtons_BagCleanup(root, bag)
-        end)
-    elseif CursorHasItem() then
-        if bag == Enum.BagIndex.Backpack then PutItemInBackpack() else PutItemInBag(InvSlot(bag)) end
+    if IsLive() then
+        if CursorHasItem() then
+            if bag == ns.KEYRING then PutKeyInKeyRing()
+            elseif bag == Enum.BagIndex.Backpack then PutItemInBackpack()
+            else PutItemInBag(InvSlot(bag)) end
+            return
+        elseif button == "RightButton" then
+            if bag ~= ns.KEYRING then
+                MenuUtil.CreateContextMenu(self, function(_, root)
+                    ContainerFrame_AddButtons_BagFilters(root, bag)
+                    ContainerFrame_AddButtons_BagCleanup(root, bag)
+                end)
+            end
+            return
+        end
+    end
+    if button == "LeftButton" then
+        ns.P.hiddenBags[bag] = ns.BagShown(bag) or nil
+        ns.ApplyAll()
     end
 end
 
@@ -324,6 +334,10 @@ local function UpdateBagBar()
         SetItemButtonCount(b, free)
         if free then b.Count:SetText(free) b.Count:Show() end
         ns.PaintBag(b)
+        -- unchecked: its slots are hidden
+        local on = ns.BagShown(bag)
+        b.icon:SetDesaturated(not on)
+        b:SetAlpha(on and 1 or 0.4)
     end
 end
 
@@ -399,12 +413,15 @@ local function UpdateFooter()
     local data = not IsLive() and ns.CharData(viewing)
     money.text:SetText(GetMoneyString((data and data.money) or (not data and GetMoney()) or 0, true))
 
-    -- the grid's free slots; a section apart shows its own
+    -- the free slots of the bags shown in the grid; a section apart shows
+    -- its own
     local free = 0
-    for _, bag in ipairs(ns.BAGS) do free = free + FreeSlots(bag, data) end
+    for _, bag in ipairs(ns.BAGS) do
+        if ns.BagShown(bag) then free = free + FreeSlots(bag, data) end
+    end
     for _, sec in ipairs(layoutSections) do
         local n = FreeSlots(sec.bag, data)
-        if sec.mode == "together" then free = free + n end
+        if sec.mode == "together" and ns.BagShown(sec.bag) then free = free + n end
         if sec.texts then sec.texts.free:SetFormattedText(L["%d free"], n) end
     end
     freeText:SetFormattedText(L["%d free"], free)
@@ -478,23 +495,26 @@ end
 
 local function Rows(n, cols) return math.ceil(n / cols) end
 
--- The live buttons of a bag, plus the backpack's locked slots apart
+-- The live buttons of the bags shown, plus the backpack's locked slots apart
 local function LiveList()
-    local main, extra, reagent = {}, {}, {}
+    local main, extra, reagent, keys = {}, {}, {}, {}
     for _, bag in ipairs(ns.BAGS) do
-        local max, size = C_Container.GetContainerNumSlots(bag), C_Container.GetContainerNumSlots(bag)
-        if bag == Enum.BagIndex.Backpack then max, size = ContainerFrame_GetContainerNumSlots(bag) end
-        for slot = 1, max do
-            local b = ns.LiveButton(bag, slot, grid)
-            if slot > size then extra[#extra + 1] = b else main[#main + 1] = b end
+        if ns.BagShown(bag) then
+            local max, size = C_Container.GetContainerNumSlots(bag), C_Container.GetContainerNumSlots(bag)
+            if bag == Enum.BagIndex.Backpack then max, size = ContainerFrame_GetContainerNumSlots(bag) end
+            for slot = 1, max do
+                local b = ns.LiveButton(bag, slot, grid)
+                if slot > size then extra[#extra + 1] = b else main[#main + 1] = b end
+            end
         end
     end
-    for slot = 1, C_Container.GetContainerNumSlots(ns.REAGENT_BAG) do
-        reagent[#reagent + 1] = ns.LiveButton(ns.REAGENT_BAG, slot, grid)
-    end
     for _, b in ipairs(extra) do main[#main + 1] = b end
-    local keys = {}
-    if ns.KeyringOn() then
+    if ns.BagShown(ns.REAGENT_BAG) then
+        for slot = 1, C_Container.GetContainerNumSlots(ns.REAGENT_BAG) do
+            reagent[#reagent + 1] = ns.LiveButton(ns.REAGENT_BAG, slot, grid)
+        end
+    end
+    if ns.KeyringOn() and ns.BagShown(ns.KEYRING) then
         for slot = 1, ns.BagSize(ns.KEYRING) do keys[#keys + 1] = ns.LiveButton(ns.KEYRING, slot, grid) end
     end
     return main, reagent, keys
@@ -504,6 +524,7 @@ end
 local function SavedList(data)
     local main, reagent, keys = {}, {}, {}
     local function Add(list, bag)
+        if not ns.BagShown(bag) then return end
         local saved = data.bags and data.bags[bag]
         for slot = 1, saved and saved.size or 0 do list[#list + 1] = saved.items[slot] or false end
     end

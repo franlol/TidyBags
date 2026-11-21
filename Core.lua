@@ -35,8 +35,9 @@ ns.defaults = {
     size = 36,              -- item size (px)
     spacing = 4,            -- space between items (px)
     scale = 100,            -- window scale (%)
-    reagents = "separate",  -- the reagent bag: "separate", "together" or "hidden"
+    reagents = "separate",  -- the reagent bag: "separate" or "together" (in the grid)
     keyring = "separate",   -- the keyring: the same choices
+    hiddenBags = {},        -- [bagID] = true: its slots are not shown (bag slots row)
     bagBar = false,         -- the equipped bags above the items
     locked = false,         -- the window can't be dragged
     pos = { point = "BOTTOMRIGHT", x = -60, y = 110 },
@@ -104,13 +105,35 @@ end
 -------------------------------------------------------------------------------
 local DEFAULT = "Default"
 
+-- Older settings in the current form
+local function Migrate(p)
+    -- "hidden" reagent bag or keyring: now an unchecked bag in the bag slots row
+    for key, bag in pairs({ reagents = ns.REAGENT_BAG, keyring = ns.KEYRING }) do
+        if p[key] == "hidden" then
+            p.hiddenBags = p.hiddenBags or {}
+            p.hiddenBags[bag] = true
+            p[key] = "separate"
+        end
+    end
+end
+
+local function FillProfile(p)
+    Migrate(p)
+    Fill(p, ns.defaults)
+end
+
 local function SetProfile(name)
     local db = ns.db
     db.profiles[name] = db.profiles[name] or {}
     db.profileOf[ns.charKey] = name
     ns.profileName = name
     ns.P = db.profiles[name]
-    Fill(ns.P, ns.defaults)
+    FillProfile(ns.P)
+end
+
+-- Whether a bag's slots are shown (the bag slots row)
+function ns.BagShown(bag)
+    return not ns.P.hiddenBags[bag]
 end
 
 function ns.UseProfile(name)
@@ -123,7 +146,7 @@ function ns.CopyProfile(from)
     if not src or from == ns.profileName then return end
     wipe(ns.P)
     for k, v in pairs(Copy(src)) do ns.P[k] = v end
-    Fill(ns.P, ns.defaults)
+    FillProfile(ns.P)
     ns.ApplyAll()
 end
 

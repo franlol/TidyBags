@@ -43,7 +43,6 @@ ns.translations.esES = {
     ["Reagent bag"] = "Bolsa de componentes",
     ["Separate"] = "Aparte",
     ["With the rest"] = "Con el resto",
-    ["Hidden"] = "Oculta",
     ["Sorting"] = "Orden",
     ["Game settings, for every character."] = "Ajustes del juego, para todos los personajes.",
     ["Sort from right to left"] = "Ordenar de derecha a izquierda",
