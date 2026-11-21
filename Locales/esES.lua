@@ -39,8 +39,6 @@ ns.translations.esES = {
     -- Minimap icon
     ["Profile"] = "Perfil",
     ["Click"] = "Clic",
-    ["Right click"] = "Clic derecho",
-    ["Open the bags"] = "Abrir las bolsas",
     ["Open the options"] = "Abrir las opciones",
     ["Reset position"] = "Restablecer posición",
     ["Language"] = "Idioma",

@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 -- TidyBags - Minimap button (LibDBIcon) and addon menu entry
--- Click: the bags · right click: the options
+-- Click: the options
 -------------------------------------------------------------------------------
 
 local ADDON, ns = ...
@@ -17,15 +17,14 @@ local function Start()
         type = "launcher",
         text = "TidyBags",
         icon = "Interface\\Icons\\INV_Misc_Bag_08",
-        OnClick = function(_, button)
-            if button == "RightButton" then ns.ToggleOptions() else ToggleAllBags() end
+        OnClick = function()
+            ns.ToggleOptions()
         end,
         OnTooltipShow = function(tip)
             tip:AddLine(COLOR .. "TidyBags|r")
             tip:AddLine(L["Profile"] .. ": |cffffffff" .. (ns.profileName or "") .. "|r")
             tip:AddLine(" ")
-            tip:AddDoubleLine(L["Click"], L["Open the bags"], 0.7, 0.7, 0.7, 1, 1, 1)
-            tip:AddDoubleLine(L["Right click"], L["Open the options"], 0.7, 0.7, 0.7, 1, 1, 1)
+            tip:AddDoubleLine(L["Click"], L["Open the options"], 0.7, 0.7, 0.7, 1, 1, 1)
         end,
     })
     -- the addon menu entry follows LibDBIcon's own saved showInCompartment
