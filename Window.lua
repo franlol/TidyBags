@@ -263,10 +263,17 @@ local function BagEnter(self)
     ns.FocusBag(bag)
 end
 
+-- The focus stays while the cursor crosses the gaps between the bag slots
+-- (the row takes the motion there, clicks pass through) and ends when it
+-- leaves the row
 local function BagLeave()
     GameTooltip:Hide()
-    ns.FocusBag(nil)
+    if not bagBar:IsMouseOver() then ns.FocusBag(nil) end
 end
+bagBar:EnableMouseMotion(true)
+bagBar:SetScript("OnLeave", function(self)
+    if not self:IsMouseOver() then ns.FocusBag(nil) end
+end)
 
 -- Click: shows or hides the bag's slots. With an item on the cursor it goes
 -- into the bag (a key into the keyring); right click: the game's bag options
