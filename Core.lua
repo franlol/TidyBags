@@ -29,6 +29,7 @@ function ns.KeyringOn()
 end
 
 ns.defaults = {
+    enabled = true,         -- off: the game's own bags
     style = "flaty",        -- "flaty" or "blizzard"
     columns = 12,
     size = 36,              -- item size (px)

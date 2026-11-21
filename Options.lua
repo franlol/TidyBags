@@ -30,6 +30,16 @@ end
 local function Count(v) return ("%d"):format(v) end
 local function Pct(v) return ("%d%%"):format(v) end
 
+-- Off: everything is the game's, and these options are greyed out.
+-- O(opts) adds that to a control's options (a new table for each control)
+local function On() return ns.P.enabled end
+local function O(opts)
+    opts = opts or {}
+    local extra = opts.enableIf
+    opts.enableIf = extra and function() return On() and extra() end or On
+    return opts
+end
+
 local function Rebuild()
     -- the window is built again in the new language, same page and place
     local current = win.current
@@ -51,34 +61,40 @@ end
 local function BuildLook(container)
     local page = UI.Page(container, 2)
 
-    local card = page:Add(1, UI.Card(page.content, L["Style"]))
+    local card = page:Add(1, UI.Card(page.content, "TidyBags", L["Off: the game's own bags."]))
+    card:Add(UI.Switch(card, L["Enabled"], function() return ns.P.enabled end, function(v)
+        ns.P.enabled = v
+        ns.ApplyAll()
+    end))
+
+    card = page:Add(1, UI.Card(page.content, L["Style"]))
     local g, s = Bind("style")
-    card:Add(UI.Segmented(card, nil, { { "flaty", "Flaty" }, { "blizzard", "Blizzard" } }, g, s))
+    card:Add(UI.Segmented(card, nil, { { "flaty", "Flaty" }, { "blizzard", "Blizzard" } }, g, s, O()))
 
     card = page:Add(1, UI.Card(page.content, L["Size"]))
     g, s = Bind("columns")
-    card:Add(UI.Slider(card, L["Columns"], 6, 36, 1, g, s, { format = Count }))
+    card:Add(UI.Slider(card, L["Columns"], 6, 36, 1, g, s, O({ format = Count })))
     g, s = Bind("size")
-    card:Add(UI.Slider(card, L["Item size"], 24, 56, 1, g, s, { format = UI.px }))
+    card:Add(UI.Slider(card, L["Item size"], 24, 56, 1, g, s, O({ format = UI.px })))
     g, s = Bind("spacing")
-    card:Add(UI.Slider(card, L["Spacing"], 0, 12, 1, g, s, { format = UI.px }))
+    card:Add(UI.Slider(card, L["Spacing"], 0, 12, 1, g, s, O({ format = UI.px })))
     g, s = Bind("scale")
-    card:Add(UI.Slider(card, L["Scale"], 50, 150, 5, g, s, { format = Pct }))
+    card:Add(UI.Slider(card, L["Scale"], 50, 150, 5, g, s, O({ format = Pct })))
 
     card = page:Add(2, UI.Card(page.content, L["Window"]))
     g, s = Bind("bagBar")
-    card:Add(UI.Check(card, L["Bag slots"], g, s))
+    card:Add(UI.Check(card, L["Bag slots"], g, s, O()))
     g, s = Bind("locked")
-    card:Add(UI.Check(card, L["Lock position"], g, s))
+    card:Add(UI.Check(card, L["Lock position"], g, s, O()))
     card:Add(UI.Buttons(card, {
         { L["Reset position"], function()
             ns.P.pos = ns.Copy(ns.defaults.pos)
             ns.ApplyAll()
         end, "danger", confirm = true },
-    }))
+    }, O()))
 
-    card = page:Add(2, UI.Card(page.content, "TidyBags"))
-    card:Add(UI.Segmented(card, L["Language"], { { "enUS", "English" }, { "esES", "Español" } },
+    card = page:Add(2, UI.Card(page.content, L["Language"]))
+    card:Add(UI.Segmented(card, nil, { { "enUS", "English" }, { "esES", "Español" } },
         function() return ns.db.language or "enUS" end, function(v)
             ns.SetLanguagePref(v)
             Rebuild()
@@ -117,23 +133,23 @@ local function BuildItems(container)
 
     local card = page:Add(1, UI.Card(page.content, L["Items"]))
     local g, s = Bind("ilvl")
-    card:Add(UI.Check(card, L["Item level"], g, s))
+    card:Add(UI.Check(card, L["Item level"], g, s, O()))
     g, s = Bind("quality")
-    card:Add(UI.Check(card, L["Quality border"], g, s))
+    card:Add(UI.Check(card, L["Quality border"], g, s, O()))
     g, s = Bind("junk")
-    card:Add(UI.Check(card, L["Grey out junk"], g, s))
+    card:Add(UI.Check(card, L["Grey out junk"], g, s, O()))
 
     card = page:Add(1, UI.Card(page.content, L["Reagent bag"]))
     g, s = Bind("reagents")
     card:Add(UI.Segmented(card, nil, {
         { "separate", L["Separate"] }, { "together", L["With the rest"] }, { "hidden", L["Hidden"] },
-    }, g, s))
+    }, g, s, O()))
 
     card = page:Add(1, UI.Card(page.content, L["Keyring"]))
     g, s = Bind("keyring")
     card:Add(UI.Segmented(card, nil, {
         { "separate", L["Separate"] }, { "together", L["With the rest"] }, { "hidden", L["Hidden"] },
-    }, g, s, { enableIf = ns.KeyringOn }))
+    }, g, s, O({ enableIf = ns.KeyringOn })))
 
     -- the game's own settings (every character)
     card = page:Add(2, UI.Card(page.content, L["Sorting"], L["Game settings, for every character."]))
@@ -157,7 +173,8 @@ local OUTLINES = function()
     return { { "", L["None"] }, { "OUTLINE", L["Thin"] }, { "THICKOUTLINE", L["Thick"] } }
 end
 
-local function TextCard(page, col, key, title, enableIf)
+local function TextCard(page, col, key, title, extra)
+    local enableIf = O({ enableIf = extra }).enableIf
     local card = page:Add(col, UI.Card(page.content, title))
     local function Get(k) return function() return ns.P.texts[key][k] end end
     local function Set(k) return function(v) ns.P.texts[key][k] = v ns.ApplyAll() end end
@@ -191,7 +208,7 @@ local function BuildCharacters(container)
 
     local card = page:Add(1, UI.Card(page.content, L["Tooltips"]))
     local g, s = Bind("tooltip")
-    card:Add(UI.Check(card, L["Item counts of every character"], g, s))
+    card:Add(UI.Check(card, L["Item counts of every character"], g, s, O()))
 
     card = page:Add(2, UI.Card(page.content, L["Characters"], L["Saved when they log in."]))
     card:Add(UI.List(card, {

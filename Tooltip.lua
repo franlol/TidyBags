@@ -11,7 +11,7 @@ local function ClassColor(class)
 end
 
 local function AddCounts(tooltip, data)
-    if not ns.P or not ns.P.tooltip then return end
+    if not ns.P or not ns.P.enabled or not ns.P.tooltip then return end
     if tooltip ~= GameTooltip and tooltip ~= ItemRefTooltip then return end
     local id = data and data.id
     if type(id) ~= "number" then return end

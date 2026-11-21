@@ -23,6 +23,8 @@ ns.translations.esES = {
 
     -- Options
     ["Bags"] = "Bolsas",
+    ["Enabled"] = "Activado",
+    ["Off: the game's own bags."] = "Apagado: las bolsas del juego.",
     ["Look"] = "Aspecto",
     ["Style"] = "Estilo",
     ["Size"] = "Tamaño",
