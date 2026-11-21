@@ -472,7 +472,7 @@ function ns.FocusBag(bag)
     focusBag = bag
     if not IsLive() then return end
     for _, b in ipairs(shown) do
-        b:SetMatchesSearch(b.tbMatches ~= false and (bag == nil or b:GetBagID() == bag))
+        ns.SetMatches(b, b.tbMatches ~= false and (bag == nil or b:GetBagID() == bag))
     end
 end
 

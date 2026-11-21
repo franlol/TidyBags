@@ -88,7 +88,7 @@ ns.Paint = Paint
 -------------------------------------------------------------------------------
 local function LevelText(b)
     if not b.tbLevel then
-        b.tbLevel = b:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+        b.tbLevel = b:CreateFontString(nil, "ARTWORK", "NumberFontNormal")
     end
     return b.tbLevel
 end
@@ -109,6 +109,13 @@ function ns.StyleTexts(b)
     b.tbTexts = ns.textsVersion
     StyleText(b, b.Count, ns.P.texts.count)
     StyleText(b, LevelText(b), ns.P.texts.ilvl)
+end
+
+-- The game's search dimming on an item. It covers the item's marks; its
+-- cooldown is a frame above the dimming, so it is hidden while dimmed
+function ns.SetMatches(b, matches)
+    b:SetMatchesSearch(matches)
+    if b.Cooldown then b.Cooldown:SetAlpha(matches and 1 or 0) end
 end
 
 -- every change of the settings styles the texts again
@@ -197,7 +204,7 @@ function ns.UpdateLive(b)
     b:SetReadable(info and info.isReadable)
     b:CheckUpdateTooltip(GameTooltip:GetOwner())
     b.tbMatches = not (info and info.isFiltered)
-    b:SetMatchesSearch(b.tbMatches)
+    ns.SetMatches(b, b.tbMatches)
 
     ns.UpdateLock(b, info)
     Paint(b, texture ~= nil, quality)
@@ -262,7 +269,7 @@ function ns.UpdateSaved(b, item, search)
         local name = item and ItemName(item)
         match = name ~= nil and name:lower():find(search:lower(), 1, true) ~= nil
     end
-    b:SetMatchesSearch(match)
+    ns.SetMatches(b, match)
     Paint(b, item ~= nil, item and item.quality)
     local level = item and item.link and ns.P.ilvl and C_Item.GetDetailedItemLevelInfo(item.link)
     ShowLevel(b, id, level, item and item.quality)
