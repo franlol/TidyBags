@@ -529,13 +529,17 @@ function ns.FocusBag(bag)
     DrawOutline(bag)
 end
 
--- The style's look on a bag slot button, drawn as the item slots (same size
--- and border, so the same spacing). Shown: accent border (Flaty) or the
--- highlight Blizzard's bag bar puts on an open bag (Blizzard). Hidden: the
--- game's search dimming, as its bag bar does with a bag that does not match
+-- The style's look on a bag slot button, the size of the item slots. Flaty:
+-- the bare icon, no border. Blizzard: shown bags get the highlight its bag
+-- bar puts on an open bag. Hidden: the game's search dimming, as its bag bar
+-- does with a bag that does not match
 function ns.PaintBag(b, on)
     local isFlat = ns.P.style == "flaty"
-    ns.Paint(b, true, nil, isFlat and (on and T.accent or { 0, 0, 0 }) or nil)
+    ns.Paint(b, true)
+    if isFlat then
+        b.tbEdge:Hide()
+        b.icon:SetAllPoints()
+    end
     if not b.tbChecked then
         b.tbChecked = b:CreateTexture(nil, "OVERLAY", nil, 1)
         b.tbChecked:SetAllPoints()
