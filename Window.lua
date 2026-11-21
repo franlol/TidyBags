@@ -466,14 +466,67 @@ local PAD = 10
 local shown = {}       -- the live buttons in the grid, in order
 local focusBag
 
+-- The outline around a hovered bag's slots: a line on every side of its
+-- slots where the next cell belongs to another bag (or none), drawn in the
+-- middle of the gap, so the lines join around the group's real shape
+local cell = { step = 37, gap = 4 }    -- the last layout's cell size and gap (px)
+local outline = CreateFrame("Frame", nil, grid)
+outline:SetAllPoints()
+outline:SetFrameLevel(grid:GetFrameLevel() + 50)
+local lines = {}
+
+local function Line(i)
+    local t = lines[i]
+    if not t then
+        t = outline:CreateTexture(nil, "OVERLAY")
+        t:SetTexture("Interface\\Buttons\\WHITE8X8")
+        lines[i] = t
+    end
+    return t
+end
+
+local function DrawOutline(bag)
+    local n = 0
+    if bag then
+        local step, half = cell.step, cell.gap / 2
+        local mine = {}
+        for _, b in ipairs(shown) do
+            if b:GetBagID() == bag then mine[b.tbX .. ":" .. b.tbY] = b end
+        end
+        local r, g, bl = 1, 0.82, 0
+        if ns.P.style == "flaty" then r, g, bl = unpack(T.accent) end
+        -- left, top: the cell's corner minus half the gap; each side spans
+        -- a whole step so neighbouring lines meet
+        local function Side(x, y, w, h)
+            n = n + 1
+            local t = Line(n)
+            t:ClearAllPoints()
+            t:SetPoint("TOPLEFT", grid, "TOPLEFT", x, -y)
+            t:SetSize(w, h)
+            t:SetVertexColor(r, g, bl, 1)
+            t:Show()
+        end
+        for _, b in pairs(mine) do
+            local x, y = b.tbX - half, b.tbY - half
+            if not mine[b.tbX .. ":" .. (b.tbY - step)] then Side(x, y, step, 1) end
+            if not mine[b.tbX .. ":" .. (b.tbY + step)] then Side(x, y + step - 1, step, 1) end
+            if not mine[(b.tbX - step) .. ":" .. b.tbY] then Side(x, y, 1, step) end
+            if not mine[(b.tbX + step) .. ":" .. b.tbY] then Side(x + step - 1, y, 1, step) end
+        end
+    end
+    for i = n + 1, #lines do lines[i]:Hide() end
+end
+
 -- A bag hovered in the bag slots row: the other bags' items get the game's
--- search dimming (it covers their marks too); the rest keep their search state
+-- search dimming (it covers their marks too), the rest keep their search
+-- state, and the bag's slots get an outline
 function ns.FocusBag(bag)
     focusBag = bag
-    if not IsLive() then return end
+    if not IsLive() then return DrawOutline(nil) end
     for _, b in ipairs(shown) do
         ns.SetMatches(b, b.tbMatches ~= false and (bag == nil or b:GetBagID() == bag))
     end
+    DrawOutline(bag)
 end
 
 -- The style's look on a bag slot button, drawn as the item slots (same size
@@ -495,9 +548,11 @@ end
 -- Places a button in the grid: index i of a block starting at y (px)
 local function Place(b, i, y, cols, step, s)
     local col, row = (i - 1) % cols, math.floor((i - 1) / cols)
+    -- its cell in the grid (px), for the outline of a hovered bag
+    b.tbX, b.tbY = col * step, y + row * step
     b:SetScale(s)
     b:ClearAllPoints()
-    b:SetPoint("TOPLEFT", grid, "TOPLEFT", col * step / s, -(y + row * step) / s)
+    b:SetPoint("TOPLEFT", grid, "TOPLEFT", b.tbX / s, -b.tbY / s)
     b:Show()
 end
 
@@ -547,6 +602,7 @@ function ns.Layout()
     local isFlat = P.style == "flaty"
     local cols, size, gap = P.columns, P.size, P.spacing
     local step, s = size + gap, size / BUTTON
+    cell.step, cell.gap = step, gap
     local live = IsLive()
 
     -- header
