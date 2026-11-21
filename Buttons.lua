@@ -39,8 +39,9 @@ local function QualityColor(quality)
     if c then return c.r, c.g, c.b end
 end
 
--- The style's art on a button. quality: the item's (nil when empty)
-local function Paint(b, hasItem, quality)
+-- The style's art on a button. quality: the item's (nil when empty);
+-- edge: a color for the flat border instead of the quality's (bag slots)
+local function Paint(b, hasItem, quality, edge)
     local P = ns.P
     local flat = P.style == "flaty"
     local normal = b:GetNormalTexture()
@@ -51,7 +52,9 @@ local function Paint(b, hasItem, quality)
         b.tbFill:Show()
         b.tbFill:SetVertexColor(0.09, 0.09, 0.1, 1)
         local r, g, bl = 0, 0, 0
-        if hasItem and P.quality and quality and quality >= Enum.ItemQuality.Uncommon then
+        if edge then
+            r, g, bl = edge[1], edge[2], edge[3]
+        elseif hasItem and P.quality and quality and quality >= Enum.ItemQuality.Uncommon then
             r, g, bl = QualityColor(quality)
         end
         b.tbEdge:SetVertexColor(r or 0, g or 0, bl or 0, 1)
@@ -78,6 +81,7 @@ local function Paint(b, hasItem, quality)
     end
     ns.StyleTexts(b)
 end
+ns.Paint = Paint
 
 -------------------------------------------------------------------------------
 -- Texts on the items: stack count (Blizzard's) and item level (ours)

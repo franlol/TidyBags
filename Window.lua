@@ -347,11 +347,7 @@ local function UpdateBagBar()
         SetItemButtonTexture(b, icon)
         SetItemButtonCount(b, free)
         if free then b.Count:SetText(free) b.Count:Show() end
-        ns.PaintBag(b)
-        -- unchecked: its slots are hidden
-        local on = ns.BagShown(bag)
-        b.icon:SetDesaturated(not on)
-        b:SetAlpha(on and 1 or 0.4)
+        ns.PaintBag(b, ns.BagShown(bag))
     end
 end
 
@@ -478,24 +474,21 @@ function ns.FocusBag(bag)
     end
 end
 
--- The style's look on a bag slot button
-function ns.PaintBag(b)
-    if ns.P.style == "flaty" then
-        b:GetNormalTexture():SetAlpha(0)
-        b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        if not b.tbEdge then
-            b.tbEdge = b:CreateTexture(nil, "BACKGROUND", nil, -7)
-            b.tbEdge:SetPoint("TOPLEFT", -1, 1)
-            b.tbEdge:SetPoint("BOTTOMRIGHT", 1, -1)
-            b.tbEdge:SetColorTexture(0, 0, 0, 1)
-        end
-        b.tbEdge:Show()
-    else
-        b:GetNormalTexture():SetAlpha(1)
-        b.icon:SetTexCoord(0, 1, 0, 1)
-        if b.tbEdge then b.tbEdge:Hide() end
+-- The style's look on a bag slot button, drawn as the item slots (same size
+-- and border, so the same spacing). Shown: accent border (Flaty) or the
+-- game's checked glow (Blizzard). Hidden: grey and faded
+function ns.PaintBag(b, on)
+    local isFlat = ns.P.style == "flaty"
+    ns.Paint(b, true, nil, isFlat and (on and T.accent or { 0, 0, 0 }) or nil)
+    if not b.tbChecked then
+        b.tbChecked = b:CreateTexture(nil, "OVERLAY", nil, 1)
+        b.tbChecked:SetAllPoints()
+        b.tbChecked:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+        b.tbChecked:SetBlendMode("ADD")
     end
-    ns.StyleTexts(b)
+    b.tbChecked:SetShown(on and not isFlat)
+    b.icon:SetDesaturated(not on)
+    b:SetAlpha(on and 1 or 0.4)
 end
 
 -- Places a button in the grid: index i of a block starting at y (px)
