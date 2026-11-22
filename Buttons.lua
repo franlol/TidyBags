@@ -248,6 +248,7 @@ local function ShowMark(b, hasItem)
         mark:SetVertexColor(EMPTY_BAG_SLOT_EFFECT_COLOR:GetRGBA())
     end
     mark:SetDesaturation(1)
+    mark:SetAlpha(0.4)
     mark:Show()
 end
 
