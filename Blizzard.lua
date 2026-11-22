@@ -66,6 +66,12 @@ ns.Module(function()
         CloseAllBags()
         if not wasOpen then OpenAllBags() end
     end)
+    -- The backpack key with combined bags hides only the combined frame, so
+    -- a bag open on its own (the reagent bag, after a vendor opened them all)
+    -- would keep the window up: an open window closes every bag
+    hooksecurefunc("ToggleBackpack", function()
+        if ns.P.enabled and ns.window:IsShown() then CloseAllBags() end
+    end)
     for _, f in ipairs(BagFrames()) do
         hooksecurefunc(f, "Show", Queue)
         hooksecurefunc(f, "Hide", Queue)
