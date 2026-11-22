@@ -188,6 +188,69 @@ function ns.ShowLive()
     for _, f in pairs(bagFrames) do f:Show() end
 end
 
+-- Special bags: their empty slots show what the bag holds, in the game's
+-- own empty slot icon (Blizzard's combined bags show the bag icon there)
+local MARKS = {
+    [Enum.ItemClass.Quiver] = {
+        [Enum.ItemQuiverSubclass.Quiver] = 132381,       -- inv_ammo_arrow_01
+        [Enum.ItemQuiverSubclass.Ammopouch] = 132383,    -- inv_ammo_bullet_01
+    },
+    [Enum.ItemClass.Container] = {
+        [Enum.ItemContainerSubclass.Soul] = 134075,      -- inv_misc_gem_amethyst_02
+        [Enum.ItemContainerSubclass.Herb] = 136246,      -- trade_herbalism
+        [Enum.ItemContainerSubclass.Enchanting] = 136244, -- trade_engraving
+        [Enum.ItemContainerSubclass.Engineering] = 136243, -- trade_engineering
+        [Enum.ItemContainerSubclass.Mining] = 136248,    -- trade_mining
+        [Enum.ItemContainerSubclass.Leatherworking] = 136247, -- trade_leatherworking
+        [Enum.ItemContainerSubclass.Tacklebox] = 136245, -- trade_fishing
+        [Enum.ItemContainerSubclass.Cooking] = 133971,   -- inv_misc_food_15
+    },
+}
+
+local bagMarks = {}
+
+-- The icon for a bag's type (nil: a normal bag), kept per equipped bag item
+local function BagMark(bag)
+    if bag < 1 or bag > NUM_BAG_SLOTS then return end
+    local id = GetInventoryItemID("player", C_Container.ContainerIDToInventoryID(bag))
+    local m = bagMarks[bag]
+    if not m or m.id ~= id then
+        local icon
+        if id then
+            local _, _, _, _, _, classID, subClassID = C_Item.GetItemInfoInstant(id)
+            icon = MARKS[classID] and MARKS[classID][subClassID]
+        end
+        m = { id = id, icon = icon }
+        bagMarks[bag] = m
+    end
+    return m.icon
+end
+
+local function ShowMark(b, hasItem)
+    local mark = b.EmptyBagIcon
+    if not mark then return end
+    local icon = not hasItem and BagMark(b:GetBagID())
+    if not icon then
+        mark:Hide()
+        return
+    end
+    mark:ClearAllPoints()
+    if ns.P.style == "flaty" then
+        mark:SetPoint("TOPLEFT", 1, -1)
+        mark:SetPoint("BOTTOMRIGHT", -1, 1)
+        mark:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    else
+        mark:SetAllPoints()
+        mark:SetTexCoord(0, 1, 0, 1)
+    end
+    mark:SetTexture(icon)
+    if EMPTY_BAG_SLOT_EFFECT_COLOR then
+        mark:SetVertexColor(EMPTY_BAG_SLOT_EFFECT_COLOR:GetRGBA())
+    end
+    mark:SetDesaturation(1)
+    mark:Show()
+end
+
 -- Blizzard's own update of a bag item button, then the style on top
 function ns.UpdateLive(b, owner)
     local bag, slot = b:GetBagID(), b:GetID()
@@ -216,6 +279,7 @@ function ns.UpdateLive(b, owner)
 
     ns.UpdateLock(b, info)
     Paint(b, texture ~= nil, quality)
+    ShowMark(b, texture ~= nil)
     local level
     if info and ns.P.ilvl and IsGear(info.itemID) then
         level = C_Item.GetCurrentItemLevel(ItemLocation:CreateFromBagAndSlot(bag, slot))
